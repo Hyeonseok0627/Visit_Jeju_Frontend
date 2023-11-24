@@ -3,6 +3,9 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     // Firebase SDK 추가
     id 'com.google.gms.google-services'
+
+    // import kotlinx.android.synthetic.main.fragment_add_board.view.* 관련 플러그인 추가
+    id 'kotlin-android-extensions'
 }
 
 android {

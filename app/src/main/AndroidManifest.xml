@@ -23,6 +23,21 @@
         android:theme="@style/Theme.Visit_Jeju_App"
         tools:targetApi="31">
         <activity
+            android:name=".community.Activity.CommWriteActivity"
+            android:exported="false" />
+        <activity
+            android:name=".community.Activity.CommUpdateActivity"
+            android:exported="false" />
+        <activity
+            android:name=".community.Activity.CommReadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".community.CommunityActivity"
+            android:exported="false" />
+        <activity
+            android:name=".community.MainActivity"
+            android:exported="false" />
+        <activity
             android:name=".login.AuthActivity"
             android:exported="true" />
         <activity
