@@ -45,6 +45,7 @@ class CommunityAdapter(val context: Context, private var itemList: MutableList<C
 
             // 카테고리를 파이어베이스에 저장하는 코드
             itemCategoryView.text = "${data.category}" // 추가된 라인
+
         }
 
         holder.itemView.setOnClickListener {
