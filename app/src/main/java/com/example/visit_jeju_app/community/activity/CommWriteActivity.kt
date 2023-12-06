@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -41,7 +42,7 @@ import java.io.File
 import java.util.Date
 
 class CommWriteActivity : AppCompatActivity() {
-    lateinit var binding : ActivityCommWriteBinding
+    lateinit var binding: ActivityCommWriteBinding
 
     // 공통 메인 레이아웃 적용 코드
     //액션버튼 토글 설정 코드
@@ -54,6 +55,15 @@ class CommWriteActivity : AppCompatActivity() {
     // 디테일 뷰 중 작성자에 해당 커뮤니티 작성 이메일 불러오는 코드
     // 작성자의 이메일을 저장하는 변수
     lateinit var userEmail: String
+
+    // 다중이미지 업로드 관련 코드
+    // 선택된 이미지 파일 경로를 저장할 리스트
+    private val imageFilePaths: MutableList<String> = mutableListOf()
+
+    // 다중이미지 업로드 관련 코드
+    // 다중이미지 업로드를 위한 현재 이미지 인덱스 변수
+    private var currentImageIndex: Int = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,27 +122,33 @@ class CommWriteActivity : AppCompatActivity() {
                     startActivity(Intent(this, AccomActivity::class.java))
                     true
                 }
+
                 R.id.restaurant -> {
                     startActivity(Intent(this, ResActivity::class.java))
                     true
                 }
+
                 R.id.tour -> {
                     startActivity(Intent(this, TourActivity::class.java))
                     true
                 }
+
                 R.id.festival -> {
                     startActivity(Intent(this, FesActivity::class.java))
                     true
                 }
+
                 R.id.shopping -> {
                     startActivity(Intent(this, ShopActivity::class.java))
                     true
                 }
+
                 R.id.community -> {
                     // '커뮤니티' 메뉴 아이템 클릭 시 CommReadActivity로 이동
                     startActivity(Intent(this, CommReadActivity::class.java))
                     true
                 }
+
                 R.id.chatting -> {
                     startActivity(Intent(this, ChatActivity::class.java))
                     true
@@ -176,7 +192,14 @@ class CommWriteActivity : AppCompatActivity() {
         }
 
         // 이미지 업로드 버튼에 클릭 리스너 추가
+        // 다중이미지 업로드 관련 코드
         binding.upload.setOnClickListener {
+            // 이미지 최대 개수(3개) 체크
+            if (imageFilePaths.size >= 3) {
+                Toast.makeText(this, "최대 3개까지 업로드 가능합니다.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             // 갤러리에서 이미지 선택하는 인텐트 실행
             val intent = Intent(Intent.ACTION_PICK)
             intent.setDataAndType(
@@ -184,7 +207,6 @@ class CommWriteActivity : AppCompatActivity() {
                 "image/*"
             )
             requestLauncher.launch(intent)
-
         }
 
     }//onCreate
@@ -194,7 +216,7 @@ class CommWriteActivity : AppCompatActivity() {
     // 툴바의 검색 뷰(공통 레이아웃)
     // onCreateOptionsMenu 메서드: 액션바에 검색 기능 추가
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu,menu)
+        menuInflater.inflate(R.menu.toolbar_menu, menu)
 
         // 검색 뷰에, 이벤트 추가하기.
         val menuItem = menu?.findItem(R.id.menu_toolbar_search)
@@ -203,14 +225,15 @@ class CommWriteActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String?): Boolean {
                 //검색어가 변경시 마다, 실행될 로직을 추가.
-                Log.d("kmk","텍스트 변경시 마다 호출 : ${newText} ")
+                Log.d("kmk", "텍스트 변경시 마다 호출 : ${newText} ")
                 return true
             }
 
             override fun onQueryTextSubmit(query: String?): Boolean {
                 // 검색어가 제출이 되었을 경우, 연결할 로직.
                 // 사용자 디비, 검색을하고, 그 결과 뷰를 출력하는 형태.
-                Toast.makeText(this@CommWriteActivity,"검색어가 전송됨 : ${query}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@CommWriteActivity, "검색어가 전송됨 : ${query}", Toast.LENGTH_SHORT)
+                    .show()
                 return true
             }
         })
@@ -223,13 +246,29 @@ class CommWriteActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (it.resultCode === android.app.Activity.RESULT_OK) {
+
+            // 다중이미지 업로드 관련 코드
+            // 선택된 이미지 개수 체크
+            if (imageFilePaths.size >= 3) {
+                Toast.makeText(this, "최대 3개까지 업로드 가능합니다.", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
             // 선택된 이미지를 Glide를 사용하여 ImageView에 로드
+            // 다중이미지 업로드 관련 코드
+            val imageViewId = when (currentImageIndex) {
+                0 -> R.id.imageView1
+                1 -> R.id.imageView2
+                else -> R.id.imageView3
+            }
+            val imageView = findViewById<ImageView>(imageViewId)
+
             Glide
                 .with(applicationContext)
                 .load(it.data?.data)
                 .apply(RequestOptions().override(250, 200))
                 .centerCrop()
-                .into(binding.imageView)
+                .into(imageView)
 
             // 선택된 이미지의 파일 경로를 가져와 filePath 변수에 저장
             val cursor = contentResolver.query(
@@ -238,6 +277,10 @@ class CommWriteActivity : AppCompatActivity() {
             )
             cursor?.moveToFirst().let {
                 filePath = cursor?.getString(0) as String
+                // 다중이미지 업로드 관련 코드
+                imageFilePaths.add(filePath)
+                // 이미지 인덱스 증가
+                currentImageIndex++
             }
         }
     }
@@ -292,21 +335,31 @@ class CommWriteActivity : AppCompatActivity() {
     private fun uploadImage(docId: String) {
         // Firebase 스토리지 참조 생성
         val storageRef = storage.reference
-        // 업로드할 이미지의 스토리지 경로 설정
-        val imgRef = storageRef.child("images/${docId}.jpg")
 
-        // 선택된 이미지 파일을 Uri 형태로 변환
-        val file = Uri.fromFile(File(filePath))
-        // 이미지를 업로드하고 성공 또는 실패에 따라 처리
-        imgRef.putFile(file)
-            .addOnSuccessListener {
-                Toast.makeText(this, "업로드 성공했습니다", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "업로드 실패했습니다", Toast.LENGTH_SHORT).show()
+        // 다중이미지 업로드 관련 코드
+        // 이미지 파일 경로 리스트를 순회하며 각 이미지를 업로드
+        imageFilePaths.forEachIndexed { index, filePath ->
+            // 업로드할 이미지의 스토리지 경로 설정
+            val imgRef = storageRef.child("images/$docId-$index.jpg")
 
-            }
+            // 선택된 이미지 파일을 Uri 형태로 변환
+            val file = Uri.fromFile(File(filePath))
+            // 이미지를 업로드하고 성공 또는 실패에 따라 처리
+            imgRef.putFile(file)
+                .addOnSuccessListener {
+
+                    // 다중이미지 업로드 관련 코드
+                    // 마지막 이미지 업로드인지 확인
+                    if (index == imageFilePaths.size - 1) {
+                        Toast.makeText(this, "업로드 성공했습니다", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "업로드 실패했습니다", Toast.LENGTH_SHORT).show()
+
+                }
+        }
+
     }
-
 }
