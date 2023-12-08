@@ -55,6 +55,30 @@ class CommWriteActivity : AppCompatActivity() {
     // 작성자의 이메일을 저장하는 변수
     lateinit var userEmail: String
 
+    // requestLauncher: 이미지 선택 및 결과 처리를 위한 ActivityResultContracts의 인스턴스
+    private val requestLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode === android.app.Activity.RESULT_OK) {
+            // 선택된 이미지를 Glide를 사용하여 ImageView에 로드
+            Glide
+                .with(applicationContext)
+                .load(it.data?.data)
+                .apply(RequestOptions().override(250, 200))
+                .centerCrop()
+                .into(binding.imageView)
+
+            // 선택된 이미지의 파일 경로를 가져와 filePath 변수에 저장
+            val cursor = contentResolver.query(
+                it.data?.data as Uri,
+                arrayOf<String>(MediaStore.Images.Media.DATA), null, null, null
+            )
+            cursor?.moveToFirst().let {
+                filePath = cursor?.getString(0) as String
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCommWriteBinding.inflate(layoutInflater)
@@ -216,30 +240,6 @@ class CommWriteActivity : AppCompatActivity() {
         })
 
         return super.onCreateOptionsMenu(menu)
-    }
-
-    // requestLauncher: 이미지 선택 및 결과 처리를 위한 ActivityResultContracts의 인스턴스
-    private val requestLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        if (it.resultCode === android.app.Activity.RESULT_OK) {
-            // 선택된 이미지를 Glide를 사용하여 ImageView에 로드
-            Glide
-                .with(applicationContext)
-                .load(it.data?.data)
-                .apply(RequestOptions().override(250, 200))
-                .centerCrop()
-                .into(binding.imageView)
-
-            // 선택된 이미지의 파일 경로를 가져와 filePath 변수에 저장
-            val cursor = contentResolver.query(
-                it.data?.data as Uri,
-                arrayOf<String>(MediaStore.Images.Media.DATA), null, null, null
-            )
-            cursor?.moveToFirst().let {
-                filePath = cursor?.getString(0) as String
-            }
-        }
     }
 
     // 카테고리를 파이어베이스에 저장하는 코드
