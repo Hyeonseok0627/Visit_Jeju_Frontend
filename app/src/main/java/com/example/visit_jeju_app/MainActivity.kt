@@ -32,6 +32,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.visit_jeju_app.MyApplication.Companion.lat
 import com.example.visit_jeju_app.MyApplication.Companion.lnt
 import com.example.visit_jeju_app.accommodation.AccomActivity
+import com.example.visit_jeju_app.accommodation.adapter.AccomAdapter_Main
 import com.example.visit_jeju_app.community.activity.CommReadActivity
 import com.example.visit_jeju_app.chat.ChatMainActivity
 import com.example.visit_jeju_app.databinding.ActivityMainBinding
@@ -58,7 +59,7 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity() {
     // 페이징 설정 순서1 lsy
     // 페이징, 레스트로 부터 전달 받을 데이터 저장할 임시 리스트
-    lateinit var datasSpring: MutableList<TourList>
+    lateinit var pageTour: MutableList<TourList>
 
     // 위치 정보 위한 변수 선언 -------------------------------------
     private var fusedLocationClient: FusedLocationProviderClient? = null
@@ -85,7 +86,10 @@ class MainActivity : AppCompatActivity() {
     //페이징처리 1
     var page = 0
 
+    // 투어 액티비티 페이징 처리 코드
     private lateinit var tourAdapter_Main: TourAdapter_Main
+    // 숙박 액티비티 페이징 처리 코드
+    private lateinit var accomAdapter_Main: AccomAdapter_Main
 
     val recycler: RecyclerView by lazy {
         binding.viewRecyclerTour
@@ -99,13 +103,22 @@ class MainActivity : AppCompatActivity() {
         handler = Handler(Looper.getMainLooper())
         Log.d("lsy","Handler   Looper.getMainLooper() =====================================")
 
+        // 투어 액티비티 페이징 처리 코드
         // 투어 어댑터 초기화 및 설정
         tourAdapter_Main = TourAdapter_Main(this, mutableListOf())
         binding.viewRecyclerTour.adapter = tourAdapter_Main
 
+        // 숙박 액티비티 페이징 처리 코드
+        accomAdapter_Main = AccomAdapter_Main(this, mutableListOf())
+        binding.viewRecyclerTour.adapter = accomAdapter_Main
 
+
+        // 투어 액티비티 페이징 처리 코드
         // 페이징 설정 순서2 lsy
-        datasSpring = mutableListOf<TourList>()
+        pageTour = mutableListOf<TourList>()
+
+        // 숙박 액티비티 페이징 처리 코드
+        
 
         // 공유 프리퍼런스 파일이 존재하는지 확인
         val pref = getSharedPreferences("latlnt", MODE_PRIVATE)
@@ -473,8 +486,8 @@ class MainActivity : AppCompatActivity() {
                         // 데이터 변경 , 데이터를 추가 했을 때, ->
 
 
-                        datasSpring.addAll(it)
-//                        getData2(datasSpring)
+                        pageTour.addAll(it)
+//                        getData2(pageTour)
 //                        tourAdapter_Main.addData(it)
 
                         Log.d("ljs", "[원하는 실행 순서 3]")
@@ -504,7 +517,7 @@ class MainActivity : AppCompatActivity() {
                         val tourLayoutManager =
                             LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
                         binding.viewRecyclerTour.layoutManager = tourLayoutManager
-                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, datasSpring)
+                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, pageTour)
 //                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
                     }
                 }
@@ -540,7 +553,7 @@ class MainActivity : AppCompatActivity() {
                         // 데이터 변경 , 데이터를 추가 했을 때, ->
 
 
-//                        datasSpring.addAll(it)
+//                        pageTour.addAll(it)
                         getData2(it)
 //                        tourAdapter_Main.addData(it)
 
@@ -571,7 +584,7 @@ class MainActivity : AppCompatActivity() {
 //                        val tourLayoutManager =
 //                            LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
 //                        binding.viewRecyclerTour.layoutManager = tourLayoutManager
-//                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, datasSpring)
+//                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, pageTour)
 //                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
                     }
                 }
@@ -643,14 +656,14 @@ class MainActivity : AppCompatActivity() {
     //--------------------------------------------------------------------------------------------
     fun getData2(datas2: MutableList<TourList>?) {
         Log.d("lsy","getData2 함수 호출 시작.")
-        Log.d("lsy","getData2 함수 호출 시작2.datasSpring size 값 : ${datasSpring?.size} ")
-        datasSpring?.size?.let {
+        Log.d("lsy","getData2 함수 호출 시작2.pageTour size 값 : ${pageTour?.size} ")
+        pageTour?.size?.let {
             recycler.adapter?.notifyItemInserted(
                 it.minus(1)
             )
         }
-        if (datasSpring?.size != null){
-            datasSpring?.addAll(datas2 as Collection<TourList>)
+        if (pageTour?.size != null){
+            pageTour?.addAll(datas2 as Collection<TourList>)
         }
         recycler.adapter?.notifyDataSetChanged()
 
