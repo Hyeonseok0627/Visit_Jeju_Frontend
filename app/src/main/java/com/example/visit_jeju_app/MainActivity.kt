@@ -90,8 +90,9 @@ class MainActivity : AppCompatActivity() {
 //    var lnt : Double = 126.5601
 
     //페이징처리 1
-    var Tourpage = 0
-    var Accompage = 0
+    private var Tourpage = 0
+    private var Accompage = 0
+
 
     // 투어 액티비티 페이징 처리 코드
     private lateinit var tourAdapter_Main: TourAdapter_Main
@@ -352,17 +353,11 @@ class MainActivity : AppCompatActivity() {
 
         // 투어 끝 ====== ======== ========= ========== ========== ========== ========== ========== ================ ======== ========= ========== ========== ========== ========== ========== ======================= ======== ========= ========== ========== ========== ========== ========== ==========
 
-//        // RecyclerView에 스크롤 리스너 추가(오른쪽 끝에 닿았을 때, page 1씩 증가)
-//        binding.viewRecyclerTour.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-//            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-//                super.onScrolled(recyclerView, dx, dy)
-//                if (!recyclerView.canScrollHorizontally(1)) { // 목록의 끝에 도달했는지 확인
-//                    page++ // 페이지 번호 증가
-//                    sendTourLocationToServer2(lat, lnt, page) // 서버에 새 페이지 데이터 요청
-//                    Log.d("lsy", "Requesting page 확인1: $page")
-//                }
-//            }
-//        })
+        // 위치 정보 가져오기 및 초기 API 호출
+        if (checkPermissionForLocation(this)) {
+            getLocation()
+        }
+
     } //onCreate 끝
 
     // 싱글탑으로 메인 액티비티 재사용 시, 호출되는 데이터가 새로 반영되도록 하는 코드
@@ -414,104 +409,17 @@ class MainActivity : AppCompatActivity() {
 //                     위치 정보를 받아온 후, 서버로 전송
 //                    sendLocationToServer(lat, lnt)
 
-                    // 투어 액티비티 페이징 처리 코드
-                    val tourListCall = (applicationContext as MyApplication).networkService.getTourGPS(lat,lnt,Tourpage)
+                    // 위치 정보를 가져온 후 서버로 데이터 전송
+                    if (lat != null && lnt != null) {
+                        sendLocationData("Tour", lat, lnt, Tourpage)
+                        sendLocationData("Accom", lat, lnt, Accompage)
+                    }
 
-                    tourListCall.enqueue(object : Callback<MutableList<TourList>> {
-                        override fun onResponse(
-                            call: Call<MutableList<TourList>>,
-                            response: Response<MutableList<TourList>>
-
-                        )
-                        {
-                            // 메인 비주얼
-                            viewPager_mainVisual = findViewById(R.id.viewPager_mainVisual)
-                            viewPager_mainVisual.adapter = ImageSliderAdapter(getMainvisual()) // 어댑터 생성
-                            viewPager_mainVisual.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 방향을 가로로
-
-                            // [변경 사항][공통] 현재 위치 위도, 경도 받아오기 == 카테고리끼리 공유 => 수정 필요없음
-//                getLocation()
-                            val pref = getSharedPreferences("latlnt", MODE_PRIVATE)
-                            val lat : Double? = pref.getString("lat", "Default값")?.toDoubleOrNull()
-                            val lnt : Double? = pref.getString("lnt", "Default값")?.toDoubleOrNull()
-                            Log.d("ljs", "[원하는 실행 순서 2]")
-                            Log.d("ljs", "shared 불러온 후 lat : ${lat}, lnt : ${lnt}" +
-                                    " ->onCreate 안에서 절차대로 실행 ")
-
-                            // [변경 사항] 제주 투어 받아온 데이터 백으로 보내기
-                            sendTourLocationToServer1(lat,lnt,Tourpage)
-
-                            // 이전 위치 정보의 페이지1부터 내용이 불러오던 것을 수정완료
-                            // (sendTourLocationToServer2 이것을 onCreate() 밖으로 빼서 sendTourLocationToServer 밑에 넣어 이것 다음으로 시작하도록 설계)
-                            // RecyclerView에 스크롤 리스너 추가(오른쪽 끝에 닿았을 때, page 1씩 증가)
-                            binding.viewRecyclerTour.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                    super.onScrolled(recyclerView, dx, dy)
-                                    if (!recyclerView.canScrollHorizontally(1)) { // 목록의 끝에 도달했는지 확인
-                                        Tourpage++ // 페이지 번호 증가
-                                        sendTourLocationToServer2(lat, lnt, Tourpage) // 서버에 새 페이지 데이터 요청
-                                        Log.d("lsy", "Requesting page 확인1: $Tourpage")
-                                    }
-                                }
-                            })
-
-                        }
-
-                        override fun onFailure(call: Call<MutableList<TourList>>, t: Throwable) {
-                            Log.d("ljs", "fail")
-                            Log.d("ljs", "현재 위치 업데이트 실패: lat : ${lat}, lnt : ${lnt}")
-                        }
-                    })
-
-                    // 숙박 액티비티 페이징 처리 코드
-                    val accomListCall = (applicationContext as MyApplication).networkService.getAccomGPS(lat,lnt,Accompage)
-
-                    accomListCall.enqueue(object : Callback<MutableList<AccomList>> {
-                        override fun onResponse(
-                            call: Call<MutableList<AccomList>>,
-                            response: Response<MutableList<AccomList>>
-
-                        )
-                        {
-                            // 메인 비주얼
-                            viewPager_mainVisual = findViewById(R.id.viewPager_mainVisual)
-                            viewPager_mainVisual.adapter = ImageSliderAdapter(getMainvisual()) // 어댑터 생성
-                            viewPager_mainVisual.orientation = ViewPager2.ORIENTATION_HORIZONTAL // 방향을 가로로
-
-                            // [변경 사항][공통] 현재 위치 위도, 경도 받아오기 == 카테고리끼리 공유 => 수정 필요없음
-//                getLocation()
-                            val pref = getSharedPreferences("latlnt", MODE_PRIVATE)
-                            val lat : Double? = pref.getString("lat", "Default값")?.toDoubleOrNull()
-                            val lnt : Double? = pref.getString("lnt", "Default값")?.toDoubleOrNull()
-                            Log.d("ljs", "[원하는 실행 순서 2]")
-                            Log.d("ljs", "shared 불러온 후 lat : ${lat}, lnt : ${lnt}" +
-                                    " ->onCreate 안에서 절차대로 실행 ")
-
-                            // [변경 사항] 제주 투어 받아온 데이터 백으로 보내기
-                            sendAccomLocationToServer1(lat,lnt,Accompage)
-
-                            // 이전 위치 정보의 페이지1부터 내용이 불러오던 것을 수정완료
-                            // (sendTourLocationToServer2 이것을 onCreate() 밖으로 빼서 sendTourLocationToServer 밑에 넣어 이것 다음으로 시작하도록 설계)
-                            // RecyclerView에 스크롤 리스너 추가(오른쪽 끝에 닿았을 때, page 1씩 증가)
-                            binding.viewRecyclerAccom.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                    super.onScrolled(recyclerView, dx, dy)
-                                    if (!recyclerView.canScrollHorizontally(1)) { // 목록의 끝에 도달했는지 확인
-                                        Accompage++ // 페이지 번호 증가
-                                        sendAccomLocationToServer2(lat, lnt, Accompage) // 서버에 새 페이지 데이터 요청
-                                        Log.d("lsy", "Requesting page 확인1: $Accompage")
-                                    }
-                                }
-                            })
-
-                        }
-
-                        override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
-                            Log.d("ljs", "fail")
-                            Log.d("ljs", "현재 위치 업데이트 실패: lat : ${lat}, lnt : ${lnt}")
-                        }
-                    })
-                    
+                    // 위치 정보를 가져온 후 서버로 데이터 전송
+                    if (lat != null && lnt != null) {
+                        sendLocationDataToServer("Tour", lat, lnt, Tourpage)
+                        sendLocationDataToServer("Accom", lat, lnt, Accompage)
+                    }
                 }
             }
             .addOnFailureListener { fail ->
@@ -521,285 +429,77 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    // 백엔드 서버로 위치 데이터 전송 // -----------------------------------------------------------------------
-    // Todo 확인 포인트
-    // 투어 액티비티 페이징 처리 코드
-    private fun sendTourLocationToServer1(lat: Double?, lnt: Double?, Tourpage: Int?) {
+    // 백엔드 서버로 위치 데이터 전송하는 메서드
+    private fun sendLocationData(type: String, lat: Double?, lnt: Double?, page: Int) {
         val networkService = (applicationContext as MyApplication).networkService
-        // 투어 액티비티 페이징 처리 코드
-        val tourGPSCall = networkService.getTourGPS(lat, lnt, Tourpage)
+        when (type) {
+            "Tour" -> {
+                val call = networkService.getTourGPS(lat, lnt, page)
+                call.enqueue(object : Callback<MutableList<TourList>> {
+                    override fun onResponse(call: Call<MutableList<TourList>>, response: Response<MutableList<TourList>>) {
+                        // 처리 로직
+                    }
+                    override fun onFailure(call: Call<MutableList<TourList>>, t: Throwable) {
+                        // 오류 처리 로직
+                    }
+                })
+            }
+            "Accom" -> {
+                val call = networkService.getAccomGPS(lat, lnt, page)
+                call.enqueue(object : Callback<MutableList<AccomList>> {
+                    override fun onResponse(call: Call<MutableList<AccomList>>, response: Response<MutableList<AccomList>>) {
+                        // 처리 로직
+                    }
+                    override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
+                        // 오류 처리 로직
+                    }
+                })
+            }
+        }
+    }
 
+    // 백엔드 서버로 위치 데이터 전송하는 공통 메서드
+    private fun sendLocationDataToServer(type: String, lat: Double?, lnt: Double?, page: Int?) {
+        val networkService = (applicationContext as MyApplication).networkService
+        val call = when (type) {
+            "Tour" -> networkService.getTourGPS(lat, lnt, page)
+            "Accom" -> networkService.getAccomGPS(lat, lnt, page)
+            else -> throw IllegalArgumentException("Invalid type: $type")
+        }
 
-        // 투어 액티비티 페이징 처리 코드
-        tourGPSCall.enqueue(object : Callback<MutableList<TourList>> {
-            override fun onResponse(
-                call: Call<MutableList<TourList>>,
-                response: Response<MutableList<TourList>>
-            ) {
-
-                //
+        call.enqueue(object : Callback<MutableList<*>> {
+            override fun onResponse(call: Call<MutableList<*>>, response: Response<MutableList<*>>) {
                 if (response.isSuccessful) {
-                    val tourList = response.body()
-                    tourList?.let {
-                        // 받아온 데이터를 임시로 저장할 리스트를 전역 하나 만들고,
-                        // 최초로 5개를 받아와서, 전역에 넣고,
-                        // 페이징 되서, 2번째 페이지의 데이터 5개를 받아오면, 그 데이터를
-                        // 다시, 전역에 선언한 리스트에 다시 담고
-                        // 어댑터에 연결하기, 어댑터 객체에 다시 리스트를 인자로 넣고
-                        // 데이터 변경 , 데이터를 추가 했을 때, ->
-
-
-                        pageTour.addAll(it)
-//                        getDataTR(pageTour)
-//                        tourAdapter_Main.addData(it)
-
-                        Log.d("ljs", "[원하는 실행 순서 3]")
-                        Log.d(
-                            "ljs", "현재 위치 업데이트 성공1: lat : ${lat}, lnt : ${lnt}" +
-                                    " -> onCreate 안에서 절차대로 실행2 \n -> sendTourLocationToServer()에 의해 실행 "
-                        )
-
-//                val tourList = response.body()
-
-                        Log.d("lsy", "getTourGPS로 불러온 tourList 값 : ${tourList}")
-                        Log.d("lsy", "getTourGPS로 불러온 tourList 사이즈 : ${tourList?.size}")
-                        Log.d(
-                            "lsy", "통신 후 받아온 tourList 길이 값 : ${tourList?.size}"
-                        )
-                        Log.d("lsy", "Requesting page 확인2: $Tourpage")
-
-                        val currentTime = System.currentTimeMillis()
-
-                        // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
-                        if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
-                            return
+                    val dataList = response.body()
+                    dataList?.let {
+                        when (type) {
+                            "Tour" -> updateTourData(it as MutableList<TourList>)
+                            "Accom" -> updateAccomData(it as MutableList<AccomList>)
                         }
-
-                        lastUpdateTimestamp = currentTime
-
-                        val tourLayoutManager =
-                            LinearLayoutManager(
-                                this@MainActivity,
-                                LinearLayoutManager.HORIZONTAL,
-                                false
-                            )
-                        binding.viewRecyclerTour.layoutManager = tourLayoutManager
-                        binding.viewRecyclerTour.adapter =
-                            TourAdapter_Main(this@MainActivity, pageTour)
-//                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
                     }
+                } else {
+                    Log.d("Error", "Request Failed: $type")
                 }
             }
 
-            override fun onFailure(call: Call<MutableList<TourList>>, t: Throwable) {
-                Log.d("ljs", "[원하는 실행 순서 3] : fail")
-                call.cancel()
+            override fun onFailure(call: Call<MutableList<*>>, t: Throwable) {
+                Log.d("Error", "Network Failure: $type")
             }
         })
     }
-        // 숙박 액티비티 페이징 처리 코드
-        private fun sendAccomLocationToServer1(lat: Double?, lnt: Double?, Accompage: Int?) {
-            val networkService = (applicationContext as MyApplication).networkService
 
-        // 숙박 액티비티 페이징 처리 코드
-        val accomGPSCall = networkService.getAccomGPS(lat, lnt, Accompage )
-
-        // 숙박 액티비티 페이징 처리 코드
-        accomGPSCall.enqueue(object : Callback<MutableList<AccomList>> {
-            override fun onResponse
-                        (call: Call<MutableList<AccomList>>,
-                         response: Response<MutableList<AccomList>>) {
-
-                //
-                if (response.isSuccessful) {
-                    val accomList = response.body()
-                    accomList?.let {
-                        // 받아온 데이터를 임시로 저장할 리스트를 전역 하나 만들고,
-                        // 최초로 5개를 받아와서, 전역에 넣고,
-                        // 페이징 되서, 2번째 페이지의 데이터 5개를 받아오면, 그 데이터를
-                        // 다시, 전역에 선언한 리스트에 다시 담고
-                        // 어댑터에 연결하기, 어댑터 객체에 다시 리스트를 인자로 넣고
-                        // 데이터 변경 , 데이터를 추가 했을 때, ->
-
-
-                        pageAccom.addAll(it)
-//                        getDataTR(pageTour)
-//                        tourAdapter_Main.addData(it)
-
-                        Log.d("ljs", "[원하는 실행 순서 3]")
-                        Log.d(
-                            "ljs", "현재 위치 업데이트 성공1: lat : ${lat}, lnt : ${lnt}" +
-                                    " -> onCreate 안에서 절차대로 실행2 \n -> sendTourLocationToServer()에 의해 실행 "
-                        )
-
-//                val tourList = response.body()
-
-                        Log.d("lsy", "getAccomGPS로 불러온 accomList 값 : ${accomList}")
-                        Log.d("lsy", "getAccomGPS로 불러온 accomList 사이즈 : ${accomList?.size}")
-                        Log.d(
-                            "lsy", "통신 후 받아온 accomList 길이 값 : ${accomList?.size}"
-                        )
-                        Log.d("lsy", "Requesting page 확인2: $Accompage")
-
-                        val currentTime = System.currentTimeMillis()
-
-                        // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
-                        if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
-                            return
-                        }
-
-                        lastUpdateTimestamp = currentTime
-
-                        val accomLayoutManager =
-                            LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
-                        binding.viewRecyclerAccom.layoutManager = accomLayoutManager
-                        binding.viewRecyclerAccom.adapter = AccomAdapter_Main(this@MainActivity, pageAccom)
-//                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
-                Log.d("ljs", "[원하는 실행 순서 3] : fail")
-                call.cancel()
-            }
-        })
-
-
+    // 투어 데이터를 업데이트하는 메서드
+    private fun updateTourData(dataList: MutableList<TourList>) {
+        // 투어 데이터 처리 로직
+        pageTour.addAll(dataList)
+        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
     }
 
-    // 투어 액티비티 페이징 처리 코드
-    private fun sendTourLocationToServer2(lat: Double?, lnt: Double?, Tourpage: Int?) {
-        val networkService = (applicationContext as MyApplication).networkService
-        val tourGPSCall = networkService.getTourGPS(lat, lnt, Tourpage )
-
-        tourGPSCall.enqueue(object : Callback<MutableList<TourList>> {
-            override fun onResponse
-                        (call: Call<MutableList<TourList>>,
-                         response: Response<MutableList<TourList>>) {
-
-                //
-                if (response.isSuccessful) {
-                    val tourList = response.body()
-                    tourList?.let {
-                        // 받아온 데이터를 임시로 저장할 리스트를 전역 하나 만들고,
-                        // 최초로 5개를 받아와서, 전역에 넣고,
-                        // 페이징 되서, 2번째 페이지의 데이터 5개를 받아오면, 그 데이터를
-                        // 다시, 전역에 선언한 리스트에 다시 담고
-                        // 어댑터에 연결하기, 어댑터 객체에 다시 리스트를 인자로 넣고
-                        // 데이터 변경 , 데이터를 추가 했을 때, ->
-
-
-//                        pageTour.addAll(it)
-                        getDataTR(it)
-//                        tourAdapter_Main.addData(it)
-
-//                        Log.d("ljs", "[원하는 실행 순서 3]")
-//                        Log.d(
-//                            "ljs", "현재 위치 업데이트 성공1: lat : ${lat}, lnt : ${lnt}" +
-//                                    " -> onCreate 안에서 절차대로 실행2 \n -> sendTourLocationToServer()에 의해 실행 "
-//                        )
-
-//                val tourList = response.body()
-
-//                        Log.d("lsy", "getTourGPS로 불러온 tourList 값 : ${tourList}")
-//                        Log.d("lsy", "getTourGPS로 불러온 tourList 사이즈 : ${tourList?.size}")
-//                        Log.d(
-//                            "lsy", "통신 후 받아온 tourList 길이 값 : ${tourList?.size}"
-//                        )
-//                        Log.d("lsy", "Requesting page 확인2: $page")
-//
-//                        val currentTime = System.currentTimeMillis()
-//
-//                        // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
-//                        if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
-//                            return
-//                        }
-//
-//                        lastUpdateTimestamp = currentTime
-//
-//                        val tourLayoutManager =
-//                            LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
-//                        binding.viewRecyclerTour.layoutManager = tourLayoutManager
-//                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, pageTour)
-//                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<MutableList<TourList>>, t: Throwable) {
-                Log.d("ljs", "[원하는 실행 순서 3] : fail")
-                call.cancel()
-            }
-        })
-
-    }
-
-    // 숙박 액티비티 페이징 처리 코드
-    private fun sendAccomLocationToServer2(lat: Double?, lnt: Double?, Accompage: Int?) {
-        val networkService = (applicationContext as MyApplication).networkService
-        val accomGPSCall = networkService.getAccomGPS(lat, lnt, Accompage )
-
-        accomGPSCall.enqueue(object : Callback<MutableList<AccomList>> {
-            override fun onResponse
-                        (call: Call<MutableList<AccomList>>,
-                         response: Response<MutableList<AccomList>>) {
-
-                //
-                if (response.isSuccessful) {
-                    val accomList = response.body()
-                    accomList?.let {
-                        // 받아온 데이터를 임시로 저장할 리스트를 전역 하나 만들고,
-                        // 최초로 5개를 받아와서, 전역에 넣고,
-                        // 페이징 되서, 2번째 페이지의 데이터 5개를 받아오면, 그 데이터를
-                        // 다시, 전역에 선언한 리스트에 다시 담고
-                        // 어댑터에 연결하기, 어댑터 객체에 다시 리스트를 인자로 넣고
-                        // 데이터 변경 , 데이터를 추가 했을 때, ->
-
-
-//                        pageTour.addAll(it)
-                        getDataAC(it)
-//                        tourAdapter_Main.addData(it)
-
-//                        Log.d("ljs", "[원하는 실행 순서 3]")
-//                        Log.d(
-//                            "ljs", "현재 위치 업데이트 성공1: lat : ${lat}, lnt : ${lnt}" +
-//                                    " -> onCreate 안에서 절차대로 실행2 \n -> sendTourLocationToServer()에 의해 실행 "
-//                        )
-
-//                val tourList = response.body()
-
-//                        Log.d("lsy", "getTourGPS로 불러온 tourList 값 : ${tourList}")
-//                        Log.d("lsy", "getTourGPS로 불러온 tourList 사이즈 : ${tourList?.size}")
-//                        Log.d(
-//                            "lsy", "통신 후 받아온 tourList 길이 값 : ${tourList?.size}"
-//                        )
-//                        Log.d("lsy", "Requesting page 확인2: $page")
-//
-//                        val currentTime = System.currentTimeMillis()
-//
-//                        // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
-//                        if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
-//                            return
-//                        }
-//
-//                        lastUpdateTimestamp = currentTime
-//
-//                        val tourLayoutManager =
-//                            LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
-//                        binding.viewRecyclerTour.layoutManager = tourLayoutManager
-//                        binding.viewRecyclerTour.adapter = TourAdapter_Main(this@MainActivity, pageTour)
-//                        binding.viewRecyclerTour.adapter?.notifyDataSetChanged()
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
-                Log.d("ljs", "[원하는 실행 순서 3] : fail")
-                call.cancel()
-            }
-        })
-
+    // 숙박 데이터를 업데이트하는 메서드
+    private fun updateAccomData(dataList: MutableList<AccomList>) {
+        // 숙박 데이터 처리 로직
+        pageAccom.addAll(dataList)
+        binding.viewRecyclerAccom.adapter?.notifyDataSetChanged()
     }
     
     // -----------------------------------------------------------------------------
