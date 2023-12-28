@@ -72,13 +72,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var FesData: MutableList<FesList>
     lateinit var ShopData: MutableList<ShopList>
 
-    lateinit var newAccomData: MutableList<AccomList>
-    lateinit var newResData: MutableList<ResList>
-    lateinit var newTourData: MutableList<TourList>
-    lateinit var newFesData: MutableList<FesList>
-    lateinit var newShopData: MutableList<ShopList>
-
-
     // 위치 정보 위한 변수 선언 -------------------------------------
     private var fusedLocationClient: FusedLocationProviderClient? = null
     lateinit var locationRequest: LocationRequest
@@ -383,6 +376,7 @@ class MainActivity : AppCompatActivity() {
         getLocation("Tour")
         getLocation("Accom")
 
+
     }
 
     // 위치 데이터 획득 추가 ---------------------------------------------------------
@@ -561,9 +555,9 @@ class MainActivity : AppCompatActivity() {
         fetchLocationData2( "Tour", lat, lnt, tourPage)
     }
 
-    private fun sendAccomLocationToServer2(lat: Double?, lnt: Double?, tourPage: Int?) {
+    private fun sendAccomLocationToServer2(lat: Double?, lnt: Double?, accomPage: Int?) {
         Log.d("lsy", "sendAccomLocationToServer2 실행 됨 #################")
-        fetchLocationData2( "Accom", lat, lnt, tourPage)
+        fetchLocationData2( "Accom", lat, lnt, accomPage)
     }
 
 
