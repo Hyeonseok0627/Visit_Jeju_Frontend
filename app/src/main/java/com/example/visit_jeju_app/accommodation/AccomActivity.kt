@@ -250,6 +250,26 @@ class AccomActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    private fun loadAccomData() {
+        val networkService = (applicationContext as MyApplication).networkService
+        networkService.getAccomGPS(lat, lnt, 7.0, accomPage).enqueue(object : Callback<MutableList<AccomList>> {
+            override fun onResponse(call: Call<MutableList<AccomList>>, response: Response<MutableList<AccomList>>) {
+                val newData = response.body()
+                if (newData != null) {
+                    if (accomPage == 0) {
+                        accomList.clear() // 첫 페이지 로딩 시 기존 데이터를 지웁니다.
+                    }
+                    accomList.addAll(newData)
+                    accomAdapter.notifyDataSetChanged()
+                }
+            }
+
+            override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
+                Log.e("AccomActivity", "Failed to load data: ${t.message}")
+            }
+        })
+    }
+
     private fun setupRecyclerView() {
         accomAdapter = AccomAdapter(this, accomList)
         binding.recyclerView.apply {
@@ -266,23 +286,6 @@ class AccomActivity : AppCompatActivity() {
                 }
             })
         }
-    }
-
-    private fun loadAccomData() {
-        val networkService = (applicationContext as MyApplication).networkService
-        networkService.getAccomGPS(lat, lnt, 7.0, accomPage).enqueue(object : Callback<MutableList<AccomList>> {
-            override fun onResponse(call: Call<MutableList<AccomList>>, response: Response<MutableList<AccomList>>) {
-                val newData = response.body()
-                if (newData != null) {
-                    accomList.addAll(newData)
-                    accomAdapter.notifyDataSetChanged()
-                }
-            }
-
-            override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
-                Log.e("AccomActivity", "Failed to load data: ${t.message}")
-            }
-        })
     }
 
     private fun startLocationUpdates() {
@@ -352,7 +355,7 @@ class AccomActivity : AppCompatActivity() {
                 response: Response<MutableList<AccomList>>
 
             ) {
-                val accomList = response.body() ?: return
+                val newAccomList = response.body() ?: return
 
                 if (newAccomList.isNotEmpty()) {
                     val currentSize = accomList.size
@@ -361,30 +364,30 @@ class AccomActivity : AppCompatActivity() {
                 }
             }
 
-                Log.d("lhs","accomModel 값 : ${accomList}")
-
-                val currentTime = System.currentTimeMillis()
-
-                // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
-                if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
-                    return
-                }
-
-                lastUpdateTimestamp = currentTime
-
-                val layoutManager = LinearLayoutManager(this@AccomActivity)
-
-                binding.recyclerView.layoutManager = layoutManager
-
-                binding.recyclerView.adapter =
-                    AccomAdapter(this@AccomActivity,accomList)
-
-
-                binding.recyclerView.addItemDecoration(
-                    DividerItemDecoration(this@AccomActivity, LinearLayoutManager.VERTICAL)
-                )
-
-            }
+//                Log.d("lhs","accomModel 값 : ${accomList}")
+//
+//                val currentTime = System.currentTimeMillis()
+//
+//                // 일정 시간이 지나지 않았으면 업데이트를 건너뜁니다.
+//                if (currentTime - lastUpdateTimestamp < updateDelayMillis) {
+//                    return
+//                }
+//
+//                lastUpdateTimestamp = currentTime
+//
+//                val layoutManager = LinearLayoutManager(this@AccomActivity)
+//
+//                binding.recyclerView.layoutManager = layoutManager
+//
+//                binding.recyclerView.adapter =
+//                    AccomAdapter(this@AccomActivity,accomList)
+//
+//
+//                binding.recyclerView.addItemDecoration(
+//                    DividerItemDecoration(this@AccomActivity, LinearLayoutManager.VERTICAL)
+//                )
+//
+//            }
 
 
             override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {

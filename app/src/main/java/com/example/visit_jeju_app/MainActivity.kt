@@ -128,7 +128,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
+    // refresh 상태변수 선언 및 초기화
+    var refresh: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -398,24 +399,16 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        // 필요한 경우 refresh 변수를 초기화
+        refresh = false
+
     } //Todo onCreate 끝
 
-    // 위치 좌표 변경되었을 때, 호출되는 데이터가 새로 반영되도록 하는 코드
-//    override fun onNewIntent(intent: Intent?) {
-//        super.onNewIntent(intent)
-//        setIntent(intent) // 새 인텐트 설정
-//
-//        // 예시: 로그를 찍는 것으로 시작합니다.
-//        Log.d("lsy", "onNewIntent 호출됨")
-//
-//        // 예를 들어, 사용자의 위치 데이터를 새로고침하는 메서드 호출
-//        getLocation("Tour")
-//        getLocation("Accom")
-//        getLocation("Res")
-//        getLocation("Fes")
-//        getLocation("Shop")
-//
-//    }
+    // refresh 변수를 초기화하는 메서드
+    private fun initializeRefreshState() {
+        refresh = false
+        // 추가적인 초기화 로직이 필요하면 여기에 작성
+    }
 
     // 위치 데이터 획득 추가 ---------------------------------------------------------
     private fun createLocationRequest() {
@@ -818,6 +811,10 @@ class MainActivity : AppCompatActivity() {
     // 위치 정보 업데이트 ---------------------------------------------------------------------
     override fun onResume() {
         super.onResume()
+
+        // 액티비티가 다시 시작될 때마다 refresh 상태 초기화
+        initializeRefreshState()
+
         startLocationUpdates()
     }
 
