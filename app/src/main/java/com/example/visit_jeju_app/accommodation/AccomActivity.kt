@@ -21,8 +21,11 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.visit_jeju_app.MainActivity
 import com.example.visit_jeju_app.MyApplication
+import com.example.visit_jeju_app.MyApplication.Companion.lat
+import com.example.visit_jeju_app.MyApplication.Companion.lnt
 import com.example.visit_jeju_app.R
 import com.example.visit_jeju_app.accommodation.AccomRegionNmActivity
 import com.example.visit_jeju_app.accommodation.adapter.AccomAdapter
@@ -60,6 +63,9 @@ class AccomActivity : AppCompatActivity() {
     private val REQUEST_PERMISSION_LOCATION = 10
 
     var accomPage : Int = 0
+
+    lateinit var accomAdapter: AccomAdapter
+    var accomList: MutableList<AccomList> = mutableListOf()
 
     lateinit var binding: ActivityAccomBinding
 
@@ -193,6 +199,11 @@ class AccomActivity : AppCompatActivity() {
             val intent = Intent(this@AccomActivity, AccomRegionNmActivity::class.java)
             startActivity(intent)
         }
+
+        // onCreate 내부에 추가
+        setupRecyclerView()
+        loadAccomData()
+
     }//oncreate
 
     // 함수 구현 ---------------------------------------------------------------------------
@@ -239,6 +250,41 @@ class AccomActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    private fun setupRecyclerView() {
+        accomAdapter = AccomAdapter(this, accomList)
+        binding.recyclerView.apply {
+            layoutManager = LinearLayoutManager(this@AccomActivity)
+            adapter = accomAdapter
+            addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
+
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (!recyclerView.canScrollVertically(1) && dy > 0) {
+                        accomPage++
+                        loadAccomData()
+                    }
+                }
+            })
+        }
+    }
+
+    private fun loadAccomData() {
+        val networkService = (applicationContext as MyApplication).networkService
+        networkService.getAccomGPS(lat, lnt, 7.0, accomPage).enqueue(object : Callback<MutableList<AccomList>> {
+            override fun onResponse(call: Call<MutableList<AccomList>>, response: Response<MutableList<AccomList>>) {
+                val newData = response.body()
+                if (newData != null) {
+                    accomList.addAll(newData)
+                    accomAdapter.notifyDataSetChanged()
+                }
+            }
+
+            override fun onFailure(call: Call<MutableList<AccomList>>, t: Throwable) {
+                Log.e("AccomActivity", "Failed to load data: ${t.message}")
+            }
+        })
+    }
+
     private fun startLocationUpdates() {
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         if (ActivityCompat.checkSelfPermission(
@@ -277,6 +323,17 @@ class AccomActivity : AppCompatActivity() {
 
             getAccomListWithinRadius(lat, lnt, 7.0, accomPage)
         }
+//        // RecyclerView에 스크롤 리스너 추가(아래쪽 끝에 닿았을 때, page 1씩 증가)
+//        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+//            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+//                super.onScrolled(recyclerView, dx, dy)
+//                if (!recyclerView.canScrollVertically(1)) { // 목록의 끝에 도달했는지 확인
+//                    accomPage++ // 페이지 번호 증가
+//                        getAccomListWithinRadius(lat, lnt, 7.0, accomPage) // 서버에 새 페이지 데이터 요청
+//                    Log.d("lhs", "Requesting accomPage 확인1: $accomPage")
+//                }
+//            }
+//        })
     }
 
     // 서브메인에서 위치변경 없을 시, 백엔드에 데이터 요청 방지
@@ -295,7 +352,14 @@ class AccomActivity : AppCompatActivity() {
                 response: Response<MutableList<AccomList>>
 
             ) {
-                val accomList = response.body()
+                val accomList = response.body() ?: return
+
+                if (newAccomList.isNotEmpty()) {
+                    val currentSize = accomList.size
+                    accomList.addAll(newAccomList)
+                    accomAdapter.notifyItemRangeInserted(currentSize, newAccomList.size)
+                }
+            }
 
                 Log.d("lhs","accomModel 값 : ${accomList}")
 
