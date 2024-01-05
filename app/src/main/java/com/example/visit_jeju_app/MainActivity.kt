@@ -406,7 +406,14 @@ class MainActivity : AppCompatActivity() {
 
     // refresh 변수를 초기화하는 메서드
     private fun initializeRefreshState() {
-        refresh = false
+        refresh = true
+
+        // 페이지 변수들 초기화
+        accomPage = 0
+        resPage = 0
+        tourPage = 0
+        fesPage = 0
+        shopPage = 0
 //         추가적인 초기화 로직이 필요하면 여기에 작성
     }
 
@@ -509,9 +516,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 })
-
-                // 페이지 번호를 SharedPreferences에 저장
-                saveLastPageNumber("Tour", tourPage)
 
             }
 
@@ -817,37 +821,11 @@ class MainActivity : AppCompatActivity() {
         // 액티비티가 다시 시작될 때마다 refresh 상태 초기화
         initializeRefreshState()
 
-        // 각 카테고리의 마지막 페이지 번호를 로드
-        loadLastPageNumbers()
-
         // 위치 업데이트 재개
         startLocationUpdates()
     }
 
-    // 각 카테고리의 마지막 페이지 번호를 SharedPreferences에서 로드하는 메서드
-    private fun loadLastPageNumbers() {
-        val pref = getSharedPreferences("LastPageNumbers", MODE_PRIVATE)
-        accomPage = pref.getInt("AccomPage", 0)
-        resPage = pref.getInt("ResPage", 0)
-        tourPage = pref.getInt("TourPage", 0)
-        fesPage = pref.getInt("FesPage", 0)
-        shopPage = pref.getInt("ShopPage", 0)
 
-        // 마지막으로 본 페이지 번호를 기반으로 데이터 로드
-        fetchTourData(lat, lnt, tourPage)
-        fetchAccomData(lat, lnt, accomPage)
-        fetchFesData(lat, lnt, fesPage)
-        fetchResData(lat, lnt, resPage)
-        fetchShopData(lat, lnt, shopPage)
-    }
-
-    // 각 카테고리의 마지막 페이지 번호를 SharedPreferences에 저장하는 메서드
-    private fun saveLastPageNumber(category: String, pageNumber: Int) {
-        val pref = getSharedPreferences("LastPageNumbers", MODE_PRIVATE)
-        val editor = pref.edit()
-        editor.putInt("${category}Page", pageNumber)
-        editor.apply()
-    }
 
     private fun startLocationUpdates() {
         Log.d("lsy","startLocationUpdates =====================================")
@@ -876,13 +854,6 @@ class MainActivity : AppCompatActivity() {
     // 위치 정보 업데이트 중지 -------------------------------------------------------------------------
     override fun onPause() {
         super.onPause()
-
-        // 현재 페이지 번호를 SharedPreferences에 저장
-        saveLastPageNumber("Tour", tourPage)
-        saveLastPageNumber("Accom", accomPage)
-        saveLastPageNumber("Res", resPage)
-        saveLastPageNumber("Fes", fesPage)
-        saveLastPageNumber("Shop", shopPage)
 
         stopLocationUpdates()
         getLocation("Tour")
