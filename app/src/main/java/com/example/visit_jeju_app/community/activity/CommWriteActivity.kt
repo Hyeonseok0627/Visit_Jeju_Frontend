@@ -43,6 +43,9 @@ import java.util.Date
 class CommWriteActivity : AppCompatActivity() {
     lateinit var binding : ActivityCommWriteBinding
 
+    // 이미지뷰에 설정할 기본 이미지 리소스 ID
+    private val defaultImageResId = R.drawable.imageupload1
+
     // 공통 메인 레이아웃 적용 코드
     //액션버튼 토글 설정 코드
     // ActionBarDrawerToggle은 액션바에 가로줄 3개 아이콘 및 네비게이션 드로어를 제어하는 데 사용되는 클래스
@@ -54,6 +57,30 @@ class CommWriteActivity : AppCompatActivity() {
     // 디테일 뷰 중 작성자에 해당 커뮤니티 작성 이메일 불러오는 코드
     // 작성자의 이메일을 저장하는 변수
     lateinit var userEmail: String
+
+    // requestLauncher: 이미지 선택 및 결과 처리를 위한 ActivityResultContracts의 인스턴스
+    private val requestLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode === android.app.Activity.RESULT_OK) {
+            // 선택된 이미지를 Glide를 사용하여 ImageView에 로드
+            Glide
+                .with(applicationContext)
+                .load(it.data?.data)
+                .apply(RequestOptions().override(250, 200))
+                .centerCrop()
+                .into(binding.imageView)
+
+            // 선택된 이미지의 파일 경로를 가져와 filePath 변수에 저장
+            val cursor = contentResolver.query(
+                it.data?.data as Uri,
+                arrayOf<String>(MediaStore.Images.Media.DATA), null, null, null
+            )
+            cursor?.moveToFirst().let {
+                filePath = cursor?.getString(0) as String
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -187,9 +214,34 @@ class CommWriteActivity : AppCompatActivity() {
 
         }
 
+        // 업로드로 선택한 이미지 취소 버튼 코드 작성
+        // 이미지 취소 버튼에 클릭 리스너 추가
+        binding.cancel.setOnClickListener {
+            cancelImageSelection()
+        }
+
     }//onCreate
 
     // 함수 구현 ---------------------------------------------------------------------------
+
+    // 업로드로 선택한 이미지 취소 버튼 코드 작성
+    // 취소 버튼 클릭 시 호출되는 함수
+    // 이미지뷰에 이미지 로드
+    private fun loadImage(imageUri: Uri) {
+        Glide.with(this)
+            .load(imageUri)
+            .apply(RequestOptions().override(250, 200))
+            .centerCrop()
+            .into(binding.imageView)
+    }
+
+    // 업로드로 선택한 이미지 취소 버튼 코드 작성
+    private fun cancelImageSelection() {
+        // 이미지뷰를 기본 이미지로 설정
+        loadImage(Uri.parse("android.resource://" + packageName + "/" + defaultImageResId))
+        // 파일 경로 초기화
+        filePath = ""
+    }
 
     // 툴바의 검색 뷰(공통 레이아웃)
     // onCreateOptionsMenu 메서드: 액션바에 검색 기능 추가
@@ -216,30 +268,6 @@ class CommWriteActivity : AppCompatActivity() {
         })
 
         return super.onCreateOptionsMenu(menu)
-    }
-
-    // requestLauncher: 이미지 선택 및 결과 처리를 위한 ActivityResultContracts의 인스턴스
-    private val requestLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        if (it.resultCode === android.app.Activity.RESULT_OK) {
-            // 선택된 이미지를 Glide를 사용하여 ImageView에 로드
-            Glide
-                .with(applicationContext)
-                .load(it.data?.data)
-                .apply(RequestOptions().override(250, 200))
-                .centerCrop()
-                .into(binding.imageView)
-
-            // 선택된 이미지의 파일 경로를 가져와 filePath 변수에 저장
-            val cursor = contentResolver.query(
-                it.data?.data as Uri,
-                arrayOf<String>(MediaStore.Images.Media.DATA), null, null, null
-            )
-            cursor?.moveToFirst().let {
-                filePath = cursor?.getString(0) as String
-            }
-        }
     }
 
     // 카테고리를 파이어베이스에 저장하는 코드
