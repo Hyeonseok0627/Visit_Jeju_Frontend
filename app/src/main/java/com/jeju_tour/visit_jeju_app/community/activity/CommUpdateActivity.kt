@@ -32,16 +32,16 @@ class CommUpdateActivity : AppCompatActivity() {
     // 나누어서 파이어베이스의 스토어와 스토리지에 변경된 내용으로 저장되도록 하는 코드
     private var docId: String? = null
 
-    // Activity Result API를 사용하기 위한 런처
-    // 갤러리에서 이미지를 선택하기 위한 requestLauncher를 설정
-    private val requestLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { uri ->
-                    handleImageSelection(uri)
-                }
-            }
-        }
+//    // Activity Result API를 사용하기 위한 런처
+//    // 갤러리에서 이미지를 선택하기 위한 requestLauncher를 설정
+//    private val requestLauncher: ActivityResultLauncher<Intent> =
+//        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//            if (result.resultCode == Activity.RESULT_OK) {
+//                result.data?.data?.let { uri ->
+//                    handleImageSelection(uri)
+//                }
+//            }
+//        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,30 +60,30 @@ class CommUpdateActivity : AppCompatActivity() {
         binding.regContent.setText(content)
 
 
-        // "사진 변경" 버튼 클릭 시 갤러리에서 사진을 선택할 수 있도록 하는 코드
+//        // "사진 변경" 버튼 클릭 시 갤러리에서 사진을 선택할 수 있도록 하는 코드
+//
+//        binding.regImageUpdateBtn.setOnClickListener {
+//            val intent = Intent(Intent.ACTION_PICK)
+//            intent.setDataAndType(
+//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                "image/*"
+//            )
+//            requestLauncher.launch(intent)
+//
+//        }
 
-        binding.regImageUpdateBtn.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.setDataAndType(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                "image/*"
-            )
-            requestLauncher.launch(intent)
-
-        }
-
-        // 이미지와 내용이 모두 변경되는 경우, 이미지만 변경되는 경우, 내용만 변경되는 경우인 총 3가지 경우로
-        // 나누어서 파이어베이스의 스토어와 스토리지에 변경된 내용으로 저장되도록 하는 코드
-        // 파이어베이스에 등록된 디테일 뷰와 동일한 사진 가져오는 관련 코드
-        // 등록한 이미지 가져 오기
-        val imgRef = MyApplication.storage.reference.child("images/${docId}.jpg")
-        imgRef.downloadUrl.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Glide.with(this)
-                    .load(task.result)
-                    .into(binding.regImageUpdateView)
-            }
-        }
+//        // 이미지와 내용이 모두 변경되는 경우, 이미지만 변경되는 경우, 내용만 변경되는 경우인 총 3가지 경우로
+//        // 나누어서 파이어베이스의 스토어와 스토리지에 변경된 내용으로 저장되도록 하는 코드
+//        // 파이어베이스에 등록된 디테일 뷰와 동일한 사진 가져오는 관련 코드
+//        // 등록한 이미지 가져 오기
+//        val imgRef = MyApplication.storage.reference.child("images/${docId}.jpg")
+//        imgRef.downloadUrl.addOnCompleteListener { task ->
+//            if (task.isSuccessful) {
+//                Glide.with(this)
+//                    .load(task.result)
+//                    .into(binding.regImageUpdateView)
+//            }
+//        }
 
 
         // 내용 수정한 부분을 파이어베이스에 반영하는 코드
@@ -114,26 +114,26 @@ class CommUpdateActivity : AppCompatActivity() {
     }
 
 
-    // 이미지와 내용이 모두 변경되는 경우, 이미지만 변경되는 경우, 내용만 변경되는 경우인 총 3가지 경우로
-    // 나누어서 파이어베이스의 스토어와 스토리지에 변경된 내용으로 저장되도록 하는 코드
-    // 갤러리 열기
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
-        intent.setDataAndType(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            "image/*"
-        )
-        requestLauncher.launch(intent)
-    }
+//    // 이미지와 내용이 모두 변경되는 경우, 이미지만 변경되는 경우, 내용만 변경되는 경우인 총 3가지 경우로
+//    // 나누어서 파이어베이스의 스토어와 스토리지에 변경된 내용으로 저장되도록 하는 코드
+//    // 갤러리 열기
+//    private fun openGallery() {
+//        val intent = Intent(Intent.ACTION_PICK)
+//        intent.setDataAndType(
+//            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//            "image/*"
+//        )
+//        requestLauncher.launch(intent)
+//    }
 
-    // 갤러리에서 선택한 이미지 처리
-    private fun handleImageSelection(uri: Uri) {
-        Glide.with(applicationContext)
-            .load(uri)
-            .into(binding.regImageUpdateView)
-
-        filePath = uri.toString()
-    }
+//    // 갤러리에서 선택한 이미지 처리
+//    private fun handleImageSelection(uri: Uri) {
+//        Glide.with(applicationContext)
+//            .load(uri)
+//            .into(binding.regImageUpdateView)
+//
+//        filePath = uri.toString()
+//    }
 
 
     // 이미지와 내용이 모두 변경되는 경우, 이미지만 변경되는 경우, 내용만 변경되는 경우인 총 3가지 경우로

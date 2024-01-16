@@ -175,17 +175,17 @@ class CommWriteActivity : AppCompatActivity() {
             saveStore(status, selectedCategory)
         }
 
-        // 이미지 업로드 버튼에 클릭 리스너 추가
-        binding.upload.setOnClickListener {
-            // 갤러리에서 이미지 선택하는 인텐트 실행
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.setDataAndType(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                "image/*"
-            )
-            requestLauncher.launch(intent)
-
-        }
+//        // 이미지 업로드 버튼에 클릭 리스너 추가
+//        binding.upload.setOnClickListener {
+//            // 갤러리에서 이미지 선택하는 인텐트 실행
+//            val intent = Intent(Intent.ACTION_PICK)
+//            intent.setDataAndType(
+//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                "image/*"
+//            )
+//            requestLauncher.launch(intent)
+//
+//        }
 
     }//onCreate
 

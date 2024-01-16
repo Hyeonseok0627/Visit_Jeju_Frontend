@@ -144,13 +144,13 @@
                         android:text="🖼️ 사진"
                         android:textStyle="bold" />
 
-                    <ImageView
-                        android:id="@+id/ImageView"
-                        android:layout_width="match_parent"
-                        android:layout_height="300dp"
-                        android:layout_marginTop="10dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/imageupload1" />
+<!--                    <ImageView-->
+<!--                        android:id="@+id/ImageView"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="300dp"-->
+<!--                        android:layout_marginTop="10dp"-->
+<!--                        android:scaleType="centerCrop"-->
+<!--                        android:src="@drawable/imageupload1" />-->
 
                     <LinearLayout
                         android:layout_width="wrap_content"
