@@ -455,7 +455,6 @@ class MainActivity : AppCompatActivity() {
             override fun run() {
                 currentPage = (currentPage + 1) % NUM_PAGES // 다음 페이지로 이동
                 viewPager_mainVisual.setCurrentItem(currentPage, true) // 다음 페이지로 슬라이드
-
                 handler.postDelayed(this, 3000) // 3초 후에 다음 페이지로 이동
             }
         }
@@ -468,10 +467,10 @@ class MainActivity : AppCompatActivity() {
     // 뷰 페이저에 들어갈 아이템
     private fun getMainvisual(): ArrayList<Int> {
         return arrayListOf<Int>(
-                R.drawable.jeju_apec02,
-                R.drawable.jeju_apec03,
-                R.drawable.jeju_apec04,
-                R.drawable.jeju_apec01,)
+            R.drawable.visual1,
+            R.drawable.visual2,
+            R.drawable.visual3,
+            R.drawable.visual4,)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
